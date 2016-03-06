@@ -2,6 +2,8 @@ apt-get -qqy update
 apt-get -qqy install postgresql python-psycopg2
 apt-get -qqy install python-flask python-sqlalchemy
 apt-get -qqy install python-pip
+apt-get -qqy install git
+apt-get -qqy install apache2 libapache2-mod-wsgi
 pip install bleach
 pip install oauth2client
 pip install requests
