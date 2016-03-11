@@ -63,3 +63,4 @@ http://docs.sqlalchemy.org/en/latest/dialects/postgresql.html#module-sqlalchemy.
 http://stackoverflow.com/a/18664239
 http://www.postgresql.org/docs/9.3/static/index.html
 http://stackoverflow.com/a/11651783
+http://stackoverflow.com/questions/869092/how-to-enable-mod-rewrite-for-apache-2-2
