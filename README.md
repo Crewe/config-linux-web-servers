@@ -1,22 +1,34 @@
 # Configuring Linux Web Servers
 
-Summary of steps
+## Summary of steps
 
-Server access:
+### Server Access
 ssh://52.24.235.146:2200
 
-Application URL:
+### Application URL
 http://ec2-52-24-235-146.us-west-2.compute.amazonaws.com/
 
-Software And Configuration Summary:
+### Software And Configuration Summary
 
-Changed  and only allowed SSH on port 2200 on ufw as well as NTC and HTTP on standard ports and turned on firewall logging
-created user 'grader' and gave sudo privileges
-updated repository sources
-upgraded installed packages
-removed old/unused packages
-made a SSH key pair for the grader user and added it to ~/.ssh/authorized_keys
-Set time zone to UTC from EST
+1. Changed  and only allowed SSH on port 2200 on ufw as well as NTC and HTTP on standard ports and turned on firewall logging
+
+1. Created user 'grader' and gave sudo privileges
+```
+steps
+```
+
+1. Updated repository sources, upgraded installed packages, and removed old/unused packages:
+```
+$ sudo apt-get update && sudo apt-get upgrade && sudo apt-get autoremove
+```
+
+1. Made a SSH key pair for the grader user and added it to ~/.ssh/authorized_keys
+
+1. Set time zone to UTC from EST
+```
+$ sudo ln -sf /usr/share/zoneinfo/UTC /etc/localtime
+```
+
 installed git, python2.7, and python-pip
 Installed and configured apache to use mod_wsgi (libapache2-mod-wsgi)
 Installed and configured postgreSQL and added a role 'catalog' without superuser privileges, as well as system user with the same name.
