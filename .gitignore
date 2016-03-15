@@ -48,3 +48,7 @@ Temporary Items
 /python-foundations
 /fullstack-vm
 .vagrant
+
+*.pub
+
+*.rsa
