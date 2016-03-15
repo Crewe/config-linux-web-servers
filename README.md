@@ -1,14 +1,12 @@
 # Configuring Linux Web Servers
 
-## Summary of steps
+## Server Access
+IP and Port for ssh: __52.24.235.146:2200__
 
-### Server Access
-ssh://52.24.235.146:2200
-
-### Application URL
+## Application URL
 http://ec2-52-24-235-146.us-west-2.compute.amazonaws.com/
 
-### Software And Configuration Summary
+## Software And Configuration Summary
 
 * Created user `grader` and give sudo privileges
 ```
@@ -19,7 +17,7 @@ http://ec2-52-24-235-146.us-west-2.compute.amazonaws.com/
 ```
 * Then edited the file to have the correct user name.
 
-* Made a SSH key pair for the grader user and added it to /home/grader/.ssh/authorized_keys
+* Made a SSH key pair for the grader user and added it to `/home/grader/.ssh/authorized_keys`
 
 * Changed to grader user and only allowed SSH on port 2200 on ufw as well as NTC and HTTP on standard ports and turned on firewall logging
 ```
@@ -172,12 +170,12 @@ _000-default.conf_:
 
 ### Third Party Sources:
 
-https://wiki.postgresql.org/wiki/PostgreSQL_For_Development_With_Vagrant
-http://stackoverflow.com/a/17916515
-http://www.thegeekstuff.com/2010/09/change-timezone-in-linux/
-http://flask.pocoo.org/docs/0.10/deploying/mod_wsgi/
-http://docs.sqlalchemy.org/en/latest/dialects/postgresql.html#module-sqlalchemy.dialects.postgresql.psycopg2
-http://stackoverflow.com/a/18664239
-http://www.postgresql.org/docs/9.3/static/index.html
-http://stackoverflow.com/a/11651783
-http://stackoverflow.com/questions/869092/how-to-enable-mod-rewrite-for-apache-2-2
+1. https://wiki.postgresql.org/wiki/PostgreSQL_For_Development_With_Vagrant
+1. http://stackoverflow.com/a/17916515
+1. http://www.thegeekstuff.com/2010/09/change-timezone-in-linux/
+1. http://flask.pocoo.org/docs/0.10/deploying/mod_wsgi/
+1. http://docs.sqlalchemy.org/en/latest/dialects/postgresql.html#module-sqlalchemy.dialects.postgresql.psycopg2
+1. http://stackoverflow.com/a/18664239
+1. http://www.postgresql.org/docs/9.3/static/index.html
+1. http://stackoverflow.com/a/11651783
+1. http://stackoverflow.com/questions/869092/how-to-enable-mod-rewrite-for-apache-2-2
