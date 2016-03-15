@@ -8,16 +8,22 @@ http://ec2-52-24-235-146.us-west-2.compute.amazonaws.com/
 
 ## Software And Configuration Summary
 
+* Updated repository sources, upgraded installed packages, and removed old/unused packages:
+```
+# apt-get update && sudo apt-get upgrade && sudo apt-get autoremove
+```
+
 * Created user `grader` and give sudo privileges
 ```
 # apt-get install finger
 # adduser grader
-# cp /etc/sudoers.d grader.d
-# cp /etc/sudoers.d /etc/sudoers/grader.d
+# touch /etc/sudoers.d/grader
 ```
-* Then edited the file to have the correct user name.
+* Edit sudoers file and add: `grader ALL=(ALL) NOPASSWD:ALL`
 
-* Made a SSH key pair for the grader user and added it to `/home/grader/.ssh/authorized_keys`
+* Changed to grader user `# su grader`
+
+* Made a SSH key pair with `ssh-keygen` for the grader user and added it to `/home/grader/.ssh/authorized_keys`
 
 * Changed to grader user and only allowed SSH on port 2200 on ufw as well as NTC and HTTP on standard ports and turned on firewall logging
 ```
@@ -25,21 +31,14 @@ $ sudo ufw default deny incoming
 $ sudo ufw default allow outgoing
 $ sudo ufw allow 2200/tcp
 $ sudo ufw allow www
-$ sudo ufw status
-$ sudo ufw enable
 $ sudo ufw allow ntp
 $ sudo ufw logging on
 $ sudo ufw enable
 ```
 
-* Disabled the root user access by setting __AllowRootLogin__ to __no__ in `/etc/ssh/sshd_config`, whitelisted grader user by adding __AllowUsers grader__ and then restarted the service.
+* Disabled the root user access by setting __AllowRootLogin__ to __no__ in `/etc/ssh/sshd_config`, whitelisted grader user by adding __AllowUsers grader__ and then restarted the service and set __Port__ to __2200__. Then restarted the service.
 ```
-$ sudo /etc/init.d/ssh restart
-```
-
-* Updated repository sources, upgraded installed packages, and removed old/unused packages:
-```
-$ sudo apt-get update && sudo apt-get upgrade && sudo apt-get autoremove
+$ sudo service ssh restart
 ```
 
 * Set time zone to UTC from EST
@@ -49,11 +48,11 @@ $ sudo ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 
 * Installed required packages:
 ```
-$ sudo apt-get install git python2.7 and python-pip libapache2-mod-wsgi \
+$ sudo apt-get install git python2.7 python-pip apache2 libapache2-mod-wsgi \
 postgresql
 ```
 
-* Installed and configured postgreSQL and added a role 'catalog' without superuser privileges, as well as system user with the same name.
+* Configured postgreSQL and added a role `catalog` without superuser privileges.
 ```
 $ sudo su - postgres
 $ createuser catalog -PRSd
@@ -63,14 +62,13 @@ $ exit
 * Added line `local   item_catalog    catalog                                 md5` to config file, and create a linux user `catalog`
 ```
 $ sudo vim /etc/postgresql/9.3/main/pg_hba.conf
-$ sudo adduser catalog then configure the database for the catalog role to use.
+$ sudo service postgresql restart
+$ sudo adduser catalog 
+```
+* Then configure the database for the catalog role to use, as well as system user.
+```
 $ sudo su - postgres
 $ createdb item_catalog
-$ psql
-# \c item_catalog
-# grant all on item_catalog to catalog;
-# \q
-# exit
 ```
 * Cloned repository into apache server root [item-catalog](https://github.com/Crewe/item-catalog) and changed to 'dev-site' branch
 * Added .htaccess file to root directory to restrict serving of the .git folder.
@@ -120,12 +118,9 @@ $ cd ..
 ```
 
 * Updated client_secrets.json file to have the server host in the Google developer console setup database with `python database_setup.py`, and seeded database with `python seed_database.py`.
+
 * Configured apache2 site conf to use the WSGI alias to point to the repo directory
 and enabled mod_rewrite on apache so that the IP redirects to the domain name.
-```
-$ sudo a2enmod rewrite
-$ sudo service apache2 restart
-```
 _000-default.conf_:
 ```
 <VirtualHost *:80>
@@ -156,17 +151,21 @@ _000-default.conf_:
 	# following line enables the CGI configuration for this host only
 	# after it has been globally disabled with "a2disconf".
 	#Include conf-available/serve-cgi-bin.conf
-    RewriteEngine On
-    RewriteCond %{HTTP_HOST} !^ec2-52-24-235-146.us-west-2.compute.amazonaws.com$
-    RewriteRule /.* http://ec2-52-24-235-146.us-west-2.compute.amazonaws.com/ [R]
-    WSGIScriptAlias / /var/www/html/item-catalog/itemcatalog.wsgi
+        RewriteEngine On
+        RewriteCond %{HTTP_HOST} !^ec2-52-24-235-146.us-west-2.compute.amazonaws.com$
+        RewriteRule /.* http://ec2-52-24-235-146.us-west-2.compute.amazonaws.com/ [R]
+        WSGIScriptAlias / /var/www/html/item-catalog/itemcatalog.wsgi
 </VirtualHost>
 ```
-
+* Enable Apache modules and restart apache
+```
+$ sudo a2enmod rewrite
+$ sudo a2enmod wsgi
+$ sudo service apache2 restart
+```
 * Added `127.0.1.1 ip-10-20-2-228` to */etc/hosts* file.
 * Restarted ssh server
-* Restarted apache server
-
+* Updated repository sources, upgraded installed packages, and removed old/unused packages again.
 
 ### Third Party Sources:
 
