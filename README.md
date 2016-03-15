@@ -1,28 +1,25 @@
 # Configuring Linux Web Servers
 
-## Summary of steps
+## Server Access
+IP and Port for ssh: __52.24.235.146:2200__
 
-### Server Access
-ssh://52.24.235.146:2200
-
-### Application URL
+## Application URL
 http://ec2-52-24-235-146.us-west-2.compute.amazonaws.com/
 
-### Software And Configuration Summary
+## Software And Configuration Summary
 
-
-1. Created user 'grader' and give sudo privileges
+* Created user `grader` and give sudo privileges
 ```
 # apt-get install finger
 # adduser grader
 # cp /etc/sudoers.d grader.d
 # cp /etc/sudoers.d /etc/sudoers/grader.d
 ```
-Then edit the file to have the correct user name.
+* Then edited the file to have the correct user name.
 
-1. Made a SSH key pair for the grader user and added it to /home/grader/.ssh/authorized_keys
+* Made a SSH key pair for the grader user and added it to `/home/grader/.ssh/authorized_keys`
 
-1. Changed to grader user and only allowed SSH on port 2200 on ufw as well as NTC and HTTP on standard ports and turned on firewall logging
+* Changed to grader user and only allowed SSH on port 2200 on ufw as well as NTC and HTTP on standard ports and turned on firewall logging
 ```
 $ sudo ufw default deny incoming
 $ sudo ufw default allow outgoing
@@ -35,34 +32,35 @@ $ sudo ufw logging on
 $ sudo ufw enable
 ```
 
-* Disabled the root user access by setting *AllowRootLogin* to *no* in `/etc/ssh/sshd_config`, whitelisted grader user by adding *AllowUsers grader* and then restarted the service.
+* Disabled the root user access by setting __AllowRootLogin__ to __no__ in `/etc/ssh/sshd_config`, whitelisted grader user by adding __AllowUsers grader__ and then restarted the service.
 ```
 $ sudo /etc/init.d/ssh restart
 ```
 
-1. Updated repository sources, upgraded installed packages, and removed old/unused packages:
+* Updated repository sources, upgraded installed packages, and removed old/unused packages:
 ```
 $ sudo apt-get update && sudo apt-get upgrade && sudo apt-get autoremove
 ```
 
-1. Set time zone to UTC from EST
+* Set time zone to UTC from EST
 ```
 $ sudo ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 ```
 
-Installed required packages:
-```$ sudo apt-get install git python2.7 and python-pip libapache2-mod-wsgi \
-postgresql```
+* Installed required packages:
+```
+$ sudo apt-get install git python2.7 and python-pip libapache2-mod-wsgi \
+postgresql
+```
 
-Installed and configured apache to use mod_wsgi (libapache2-mod-wsgi)
-Installed and configured postgreSQL and added a role 'catalog' without superuser privileges, as well as system user with the same name.
-
+* Installed and configured postgreSQL and added a role 'catalog' without superuser privileges, as well as system user with the same name.
 ```
 $ sudo su - postgres
 $ createuser catalog -PRSd
 $ exit
 ```
-Add line `local   item_catalog    catalog                                 md5` to config file, and create a linux user `catalog`
+
+* Added line `local   item_catalog    catalog                                 md5` to config file, and create a linux user `catalog`
 ```
 $ sudo vim /etc/postgresql/9.3/main/pg_hba.conf
 $ sudo adduser catalog then configure the database for the catalog role to use.
@@ -74,19 +72,18 @@ $ psql
 # \q
 # exit
 ```
-Cloned repository into apache server root [https://github.com/Crewe/item-catalog](item-catalog) and changed to 'dev-site' branch
-Added .htaccess file to root directory to restrict serving of the .git folder.
-** .htaccess: **
+* Cloned repository into apache server root [item-catalog](https://github.com/Crewe/item-catalog) and changed to 'dev-site' branch
+* Added .htaccess file to root directory to restrict serving of the .git folder.
+
+_.htaccess_:
 ```
 RedirectMatch 404 /\.git
 ```
 
-installed python extensions: 
-    python-psycopg2
-    python-flask
-    python-sqlalchemy
+* Installed python extensions: 
+```$ sudo apt-get install python-psycopg2 python-flask python-sqlalchemy```
     
-configured app `/etc/var/www/html/item-catalog/config.py`
+* Configured app: `/etc/var/www/html/item-catalog/config.py`
 ```
 # config.py
 # Configuation file for the database connection
@@ -104,8 +101,7 @@ def connectionString():
 def clientSecrets():
     return client_secrets_path
 ```
-
-    ** itemcatalog.wsgi: **
+* Then and set path to application in _itemcatalog.wsgi_:
 ```
 import sys
 
@@ -114,7 +110,7 @@ sys.path.insert(0, '/var/www/html/item-catalog')
 from project import app as application
 ```
 
-installed pip packages, and RSS:
+Installed pip packages, and RSS:
 ```
 $ sudo pip install bleach oauth2client requests httplib2 \
 werkzeug==0.8.3 flask==0.9 Flask-login==0.1.3
@@ -122,16 +118,15 @@ $ cd PyRSS2Gen/
 $ sudo python setup.py install
 $ cd ..
 ```
-Updated client_secrets.json file to have the server host in the Google developer console
-setup database with database_setup.py
-seeded database with seed_database.py
-Configured apache2 site conf to use the WSGI alias to point to the repo directory
+
+* Updated client_secrets.json file to have the server host in the Google developer console setup database with `python database_setup.py`, and seeded database with `python seed_database.py`.
+* Configured apache2 site conf to use the WSGI alias to point to the repo directory
 and enabled mod_rewrite on apache so that the IP redirects to the domain name.
 ```
 $ sudo a2enmod rewrite
-$ sudo 
+$ sudo service apache2 restart
 ```
-** 000-default.conf: **
+_000-default.conf_:
 ```
 <VirtualHost *:80>
 	# The ServerName directive sets the request scheme, hostname and port that
@@ -168,20 +163,19 @@ $ sudo
 </VirtualHost>
 ```
 
-Added `127.0.1.1 ip-10-20-2-228` to */etc/hosts* file.
+* Added `127.0.1.1 ip-10-20-2-228` to */etc/hosts* file.
+* Restarted ssh server
+* Restarted apache server
 
-restarted ssh server
-restarted apache server
 
+### Third Party Sources:
 
-== Third Party Sources:
-
-https://wiki.postgresql.org/wiki/PostgreSQL_For_Development_With_Vagrant
-http://stackoverflow.com/a/17916515
-http://www.thegeekstuff.com/2010/09/change-timezone-in-linux/
-http://flask.pocoo.org/docs/0.10/deploying/mod_wsgi/
-http://docs.sqlalchemy.org/en/latest/dialects/postgresql.html#module-sqlalchemy.dialects.postgresql.psycopg2
-http://stackoverflow.com/a/18664239
-http://www.postgresql.org/docs/9.3/static/index.html
-http://stackoverflow.com/a/11651783
-http://stackoverflow.com/questions/869092/how-to-enable-mod-rewrite-for-apache-2-2
+1. https://wiki.postgresql.org/wiki/PostgreSQL_For_Development_With_Vagrant
+1. http://stackoverflow.com/a/17916515
+1. http://www.thegeekstuff.com/2010/09/change-timezone-in-linux/
+1. http://flask.pocoo.org/docs/0.10/deploying/mod_wsgi/
+1. http://docs.sqlalchemy.org/en/latest/dialects/postgresql.html#module-sqlalchemy.dialects.postgresql.psycopg2
+1. http://stackoverflow.com/a/18664239
+1. http://www.postgresql.org/docs/9.3/static/index.html
+1. http://stackoverflow.com/a/11651783
+1. http://stackoverflow.com/questions/869092/how-to-enable-mod-rewrite-for-apache-2-2
