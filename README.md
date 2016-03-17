@@ -157,24 +157,26 @@ _000-default.conf_:
         WSGIScriptAlias / /var/www/html/item-catalog/itemcatalog.wsgi
 </VirtualHost>
 ```
+
 * Enable Apache modules and restart apache
 ```
 $ sudo a2enmod rewrite
 $ sudo a2enmod wsgi
 $ sudo service apache2 restart
 ```
+
 * Added `127.0.1.1 ip-10-20-2-228` to */etc/hosts* file.
 * Restarted ssh server
 * Updated repository sources, upgraded installed packages, and removed old/unused packages again.
 
-* Post app config setup of extras:
+#### Post app config setup of extras:
 ```
 $ sudo apt-get install glances fail2ban unattended-upgrades \
 update-notifier-common apt-listchanges
-
 $ sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
 ```
-* Edit jail.local sections and add new ones with the following settings:
+
+* Edit _jail.local_ sections and add new ones with the following settings:
 ```
 [ssh]
 
@@ -221,9 +223,9 @@ logpath  = /var/log/apache*/*error.log
 maxretry = 2
 ```
 
-* Retsart the service with: `sudo service fail2ban restart`
+* Retsart the service with: `$ sudo service fail2ban restart`
 
-* Edit `/etc/apt/apt.conf.d/50unattended-upgrades`
+* Edit _/etc/apt/apt.conf.d/50unattended-upgrades_
 ```
 // Automatically upgrade packages from these (origin:archive) pairs
 Unattended-Upgrade::Allowed-Origins {
@@ -256,18 +258,19 @@ APT::Periodic::Update-Package-Lists "1";
 APT::Periodic::Unattended-Upgrade "1";
 ```
 
-* Edit `/etc/apt/listchanges.conf`:
-
+* Edit _/etc/apt/listchanges.conf_:
+```
 [apt]
 frontend=pager
 email_address=root
 confirm=1
 save_seen=/var/lib/apt/listchanges.db
 which=both
+```
 
 * Reboot system: `$ sudo reboot`
 
-* Run `glances` for current system and process statuses
+* Run `$ glances` for current system and process statuses
 
 ### Third Party Sources:
 
