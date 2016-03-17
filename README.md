@@ -19,7 +19,7 @@ http://ec2-52-24-235-146.us-west-2.compute.amazonaws.com/
 # adduser grader
 # touch /etc/sudoers.d/grader
 ```
-* Edit sudoers file and add: `grader ALL=(ALL) NOPASSWD:ALL`
+* Edit sudoers file and add: `grader ALL=(ALL) PASSWD:ALL`
 
 * Changed to grader user `# su grader`
 
@@ -49,7 +49,7 @@ $ sudo ln -sf /usr/share/zoneinfo/UTC /etc/localtime
 * Installed required packages:
 ```
 $ sudo apt-get install git python2.7 python-pip apache2 libapache2-mod-wsgi \
-postgresql
+postgresql python-dev
 ```
 
 * Configured postgreSQL and added a role `catalog` without superuser privileges.
@@ -110,7 +110,7 @@ from project import app as application
 
 Installed pip packages, and RSS:
 ```
-$ sudo pip install bleach oauth2client requests httplib2 \
+$ sudo pip install bleach oauth2client requests httplib2 glances \
 werkzeug==0.8.3 flask==0.9 Flask-login==0.1.3
 $ cd PyRSS2Gen/
 $ sudo python setup.py install
@@ -157,15 +157,120 @@ _000-default.conf_:
         WSGIScriptAlias / /var/www/html/item-catalog/itemcatalog.wsgi
 </VirtualHost>
 ```
+
 * Enable Apache modules and restart apache
 ```
 $ sudo a2enmod rewrite
 $ sudo a2enmod wsgi
 $ sudo service apache2 restart
 ```
+
 * Added `127.0.1.1 ip-10-20-2-228` to */etc/hosts* file.
 * Restarted ssh server
 * Updated repository sources, upgraded installed packages, and removed old/unused packages again.
+
+#### Post app config setup of extras:
+```
+$ sudo apt-get install glances fail2ban unattended-upgrades \
+update-notifier-common apt-listchanges
+$ sudo cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local
+```
+
+* Edit _jail.local_ sections and add new ones with the following settings:
+```
+[ssh]
+
+enabled   = true
+port      = 2200
+...
+
+[apache]
+
+enabled   = true
+maxretry  = 3
+findtime  = 600
+...
+
+# Used to ban clients that are searching for scripts on the website to execute and exploit
+[apache-noscript]
+
+enabled  = true
+...
+
+# Block clients who are attempting to request unusually long and suspicious URLs. These 
+# are often signs of attempts to exploit Apache by trying to trigger a buffer overflow
+[apache-overflows]
+
+enabled  = true
+...
+
+# To stop some known malicious bot request patterns
+[apache-badbots]
+
+enabled  = true
+port     = http,https
+filter   = apache-badbots
+logpath  = /var/log/apache*/*error.log
+maxretry = 2
+
+# No files are being hosted from the users home directory
+[apache-nohome]
+
+enabled  = true
+port     = http,https
+filter   = apache-nohome
+logpath  = /var/log/apache*/*error.log
+maxretry = 2
+```
+
+* Retsart the service with: `$ sudo service fail2ban restart`
+
+* Edit _/etc/apt/apt.conf.d/50unattended-upgrades_
+```
+// Automatically upgrade packages from these (origin:archive) pairs
+Unattended-Upgrade::Allowed-Origins {
+        "${distro_id}:${distro_codename}-security";
+        "${distro_id}:${distro_codename}-updates";
+//      "${distro_id}:${distro_codename}-proposed";
+//      "${distro_id}:${distro_codename}-backports";
+};
+
+...
+
+// Do automatic removal of new unused dependencies after the upgrade
+// (equivalent to apt-get autoremove)
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+
+// Automatically reboot *WITHOUT CONFIRMATION*
+//  if the file /var/run/reboot-required is found after the upgrade 
+Unattended-Upgrade::Automatic-Reboot "true";
+
+// If automatic reboot is enabled and needed, reboot at the specific
+// time instead of immediately
+//  Default: "now"
+Unattended-Upgrade::Automatic-Reboot-Time "02:00";
+```
+* Run `$ sudo dpkg-reconfigure -plow unattended-upgrades`. Or create the 
+`/etc/apt/apt.conf.d/20auto-upgrades` file and add the following to it to
+enable daily checks for upgrades:
+```
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+```
+
+* Edit _/etc/apt/listchanges.conf_:
+```
+[apt]
+frontend=pager
+email_address=root
+confirm=1
+save_seen=/var/lib/apt/listchanges.db
+which=both
+```
+
+* Reboot system: `$ sudo reboot`
+
+* Run `$ glances` for current system and process statuses
 
 ### Third Party Sources:
 
@@ -178,3 +283,10 @@ $ sudo service apache2 restart
 1. http://www.postgresql.org/docs/9.3/static/index.html
 1. http://stackoverflow.com/a/11651783
 1. http://stackoverflow.com/questions/869092/how-to-enable-mod-rewrite-for-apache-2-2
+1. http://askubuntu.com/a/235264
+1. https://wiki.debian.org/UnattendedUpgrades
+1. http://blog.mafr.de/2015/02/26/ubuntu-unattended-upgrades/
+1. https://pypi.python.org/pypi/Glances
+1. http://www.fail2ban.org/wiki/index.php/Main_Page
+1. https://www.digitalocean.com/community/tutorials/how-to-protect-an-apache-server-with-fail2ban-on-ubuntu-14-04
+1. https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-ubuntu-14-04
